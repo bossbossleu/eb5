@@ -1,78 +1,53 @@
-// Define the ID of your Google Drive file
-var fileID = "1NSQRgurpd0iyeJv5yRwIJSxaofn298JG";
+// Define width and height for the SVG container
+var svgWidth = 800; // Adjust as needed
+var svgHeight = 600; // Adjust as needed
 
-// Construct the Google Drive file URL
-var fileURL = "https://drive.google.com/uc?id=" + fileID;
+// Create margins
+var margin = { top: 30, right: 10, bottom: 10, left: 10 },
+  width = svgWidth - margin.left - margin.right,
+  height = svgHeight - margin.top - margin.bottom;
 
-// Define width and height
-var width = 800; // Adjust as needed
-var height = 600; // Adjust as needed
+// Append an SVG element to the diagram-container
+var svg = d3.select("#diagram-container").append("svg")
+  .attr("width", svgWidth)
+  .attr("height", svgHeight)
+  .append("g")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-// Load your JSON data
-d3.json(fileURL).then(function(data) {
-  console.log(data); // Log the loaded data to the console
-    // Filter out rows with N/A and blank cells
-    var filteredData = data.filter(function(d) {
-      return d.r_name && d.p_name && d.developer_1 && d.arch_firm_1;
-    });
-  
-    // Create a Sankey layout
-    var sankey = d3.sankey()
-        .nodeWidth(15)
-        .nodePadding(10)
-        .extent([[1, 1], [width - 1, height - 6]]);
-  
-    // Create nodes and links
-    var { nodes, links } = sankey({
-      nodes: filteredData.map(function(d) {
-        return { name: d.r_name };
-      }),
-      links: filteredData.map(function(d) {
-        return {
-          source: d.developer_1,
-          target: d.arch_firm_1,
-          value: 1 // You can customize the value based on your data
-        };
-      })
-    });
+/// Load your JSON data
+d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_completed_projects%20-%20NY.json").then(function (data) {
+  console.log(data); // Check if data is loaded correctly
 
-    // Create an SVG container
-    var svg = d3.select("body").append("svg")
-        .attr("width", width)
-        .attr("height", height);
-  
-    // Create links
-    var link = svg.append("g")
+  // Define the dimensions for the parallel coordinates plot
+  var dimensions = ["r_name", "p_name", "developer_1", "arch_firm_1"];
+
+  // Create scales for each dimension
+  var y = {};
+  dimensions.forEach(function (d) {
+    y[d] = d3.scalePoint()
+      .domain(data.map(function (p) { return p[d]; }))
+      .range([height, 0]);
+  });
+
+    // Create the parallel coordinates plot
+    var foreground = svg.append("g")
         .selectAll("path")
-        .data(links)
+        .data(data)
         .enter().append("path")
-        .attr("d", d3.sankeyLinkHorizontal())
-        .attr("stroke", "#000")
-        .attr("stroke-opacity", 0.2)
-        .attr("stroke-width", function(d) { return Math.max(1, d.width); });
-  
-    // Create nodes
-    var node = svg.append("g")
-        .selectAll("g")
-        .data(nodes)
-        .enter().append("g")
-        .attr("transform", function(d) {
-          return "translate(" + d.x + "," + d.y + ")";
-        });
-  
-    // Add rectangles to nodes
-    node.append("rect")
-        .attr("height", function(d) { return d.y1 - d.y0; })
-        .attr("width", sankey.nodeWidth())
-        .attr("fill", "steelblue");
-  
-    // Add text to nodes
-    node.append("text")
-        .attr("x", -6)
-        .attr("y", function(d) { return (d.y1 - d.y0) / 2; })
-        .attr("dy", "0.35em")
-        .attr("text-anchor", "end")
-        .text(function(d) { return d.name; });
+        .attr("d", path);
+
+    function path(d) {
+      return dimensions.map(function (p, i) {
+        // Check for missing data or "N/A" values
+        if (d[p] === null || d[p] === "N/A") {
+          return [y[p](p), y[p](p)];
+        }
+        return [i * (width / (dimensions.length - 1)), y[p](d[p])];
+      });
+    }
 });
 
-  
+
+
+
+
