@@ -15,7 +15,7 @@ var svg = d3.select("#diagram-container").append("svg")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 /// Load your JSON data
-d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_completed_projects%20-%20NY.json").then(function (data) {
+d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json").then(function (data) {
   console.log(data); // Check if data is loaded correctly
 
   // Define the dimensions for the parallel coordinates plot
@@ -29,22 +29,27 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
       .range([height, 0]);
   });
 
-    // Create the parallel coordinates plot
-    var foreground = svg.append("g")
-        .selectAll("path")
-        .data(data)
-        .enter().append("path")
-        .attr("d", path);
+  // Create the parallel coordinates plot
+  var foreground = svg.append("g")
+    .selectAll("path")
+    .data(data)
+    .enter().append("path")
+    .attr("d", path);
 
-    function path(d) {
-      return dimensions.map(function (p, i) {
-        // Check for missing data or "N/A" values
-        if (d[p] === null || d[p] === "N/A") {
-          return [y[p](p), y[p](p)];
-        }
-        return [i * (width / (dimensions.length - 1)), y[p](d[p])];
-      });
-    }
+  function path(d) {
+    return d3.range(dimensions.length - 1).map(function (i) {
+      var p1 = dimensions[i];
+      var p2 = dimensions[i + 1];
+
+      // Check for missing data or "N/A" values
+      if (d[p1] === null || d[p1] === "N/A" || d[p2] === null || d[p2] === "N/A") {
+        return [[i * (width / (dimensions.length - 1)), y[p1](p1)], [i * (width / (dimensions.length - 1)), y[p2](p2)]];
+      }
+
+      return [[i * (width / (dimensions.length - 1)), y[p1](d[p1])], [(i + 1) * (width / (dimensions.length - 1)), y[p2](d[p2])]];
+    });
+  }
+
 });
 
 
