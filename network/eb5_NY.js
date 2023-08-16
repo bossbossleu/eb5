@@ -6,6 +6,18 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
     // Define the dimensions for the parallel categories diagram
     var dimensions = ["r_name", "p_name", "developer_1", "arch_firm_1"];
 
+    // Fill null values with "N/A" and rename "N/A" values
+    var naCounter = 0;
+    data.forEach(function (d) {
+        dimensions.forEach(function (dimension) {
+            if (d[dimension] === null) {
+                d[dimension] = "N/A";
+            } else if (d[dimension] === "N/A") {
+                d[dimension] = "N/A " + (++naCounter);
+            }
+        });
+    });
+
     // Create an array of unique categories for each dimension
     var categoriesData = dimensions.map(function (dimension) {
         return {
@@ -51,7 +63,9 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
             }));
         })
         .attr("stroke", "steelblue")
-        .attr("stroke-opacity", 0.5)
+        .attr("stroke-opacity", function(d) {
+            return d.r_name.includes("N/A") ? 0 : 0.5;
+        })
         .attr("fill", "none");
 
     // Draw axes
@@ -68,6 +82,8 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
         .style("font-family", "Arial")
         .text(function (d) { return d; });
 });
+
+
 
 
 
