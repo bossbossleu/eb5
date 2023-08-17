@@ -1,29 +1,20 @@
 // Load your JSON data
-d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_completed_projects - NY.json").then(function (data) {
+d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_completed_projects - NY.json").then(function (originalData) {
     // Define margins
     var margin = { top: 50, right: 50, bottom: 50, left: 150 }; // Adjust as needed
 
     // Define the dimensions for the parallel categories diagram
     var dimensions = ["r_name", "p_name", "developer_1", "arch_firm_1"];
 
-    // Fill null values with "N/A" and rename "N/A" values
+    // Replace null values and "N/A" values with "NA" and label sequential "NA"
+    var data = JSON.parse(JSON.stringify(originalData)); // Clone the original data
     var naCounter = 0;
     data.forEach(function (d) {
         dimensions.forEach(function (dimension) {
-            if (d[dimension] === null) {
-                d[dimension] = "N/A";
-            } else if (d[dimension] === "N/A") {
-                d[dimension] = "N/A " + (++naCounter);
+            if (d[dimension] === null || d[dimension] === "N/A") {
+                d[dimension] = "NA " + (++naCounter);
             }
         });
-    });
-
-    // Create an array of unique categories for each dimension
-    var categoriesData = dimensions.map(function (dimension) {
-        return {
-            dimension: dimension,
-            categories: Array.from(new Set(data.map(function (d) { return d[dimension]; })))
-        };
     });
 
     // Create the parallel categories diagram
@@ -39,14 +30,14 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
 
     var x = d3.scalePoint()
         .domain(dimensions)
-        .range([0, innerWidth]);
+        .range([0, width - margin.left - margin.right]);
 
     var y = {};
 
     dimensions.forEach(function (dimension) {
         y[dimension] = d3.scalePoint()
-            .domain(categoriesData.find(function (d) { return d.dimension === dimension; }).categories)
-            .range([innerHeight, 0]);
+            .domain(Array.from(new Set(data.map(function (d) { return d[dimension]; }))))
+            .range([height - margin.top - margin.bottom, 0]);
     });
 
     var line = d3.line()
@@ -54,19 +45,31 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
         .x(function (d) { return x(d[0]); })
         .y(function (d) { return y[d[0]](d[1]); });
 
-    g.selectAll("path")
-        .data(data)
-        .enter().append("path")
-        .attr("d", function (d) {
-            return line(dimensions.map(function (dimension) {
-                return [dimension, d[dimension]];
-            }));
-        })
-        .attr("stroke", "steelblue")
-        .attr("stroke-opacity", function(d) {
-            return d.r_name.includes("N/A") ? 0 : 0.5;
-        })
-        .attr("fill", "none");
+    // Loop through each dimension and draw paths
+    for (var i = 0; i < dimensions.length - 1; i++) {
+        var currentDimension = dimensions[i];
+        var nextDimension = dimensions[i + 1];
+
+        g.selectAll(".dimension-path-" + currentDimension)
+            .data(data)
+            .enter().append("path")
+            .attr("class", "dimension-path-" + currentDimension)
+            .attr("d", function (d) {
+                var dataSegment = dimensions.slice(i, i + 2).map(function (dimension) {
+                    return [dimension, d[dimension]];
+                });
+                return line(dataSegment);
+            })
+            .attr("stroke", function(d) {
+                if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
+                    return "red";
+                } else {
+                    return "blue";
+                }
+            })
+            .attr("stroke-opacity", 0.5)
+            .attr("fill", "none");
+    }
 
     // Draw axes
     g.selectAll(".dimension")
@@ -74,14 +77,40 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
         .enter().append("g")
         .attr("class", "dimension")
         .attr("transform", function (d) { return "translate(" + x(d) + ")"; })
-        .each(function (d) { d3.select(this).call(d3.axisLeft(y[d])).selectAll("text").style("font-size", "7px").style("font-family", "Arial"); })
+        .each(function (d) { d3.select(this).call(d3.axisLeft(y[d])).selectAll("text").style("font-size", "12px").style("font-family", "Arial"); })
         .append("text")
         .style("text-anchor", "middle")
         .attr("y", -9)
-        .style("font-size", "7px")
+        .style("font-size", "12px")
         .style("font-family", "Arial")
         .text(function (d) { return d; });
+
+    // Create a new data label for the modified JSON data
+    var newDataLabel = g.append("text")
+        .attr("x", 10)
+        .attr("y", height - 10)
+        .style("font-size", "12px")
+        .style("font-family", "Arial")
+        .text("Modified Data: NA values replaced and labeled");
+
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
