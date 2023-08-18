@@ -86,7 +86,7 @@ function updateConnectedElements(clickedData) {
     .style("stroke", clickedData.selected ? "neonGreen" : "transparent");
 }
 
-// Loop through each dimension and draw paths
+// Loop through each dimension pair and draw connecting lines
 for (var i = 0; i < dimensions.length - 1; i++) {
   var currentDimension = dimensions[i];
   var nextDimension = dimensions[i + 1];
@@ -117,7 +117,7 @@ for (var i = 0; i < dimensions.length - 1; i++) {
     })
     .attr("fill", "none");
 
-  // Add additional green paths
+  // Append additional green paths for clicked circles
   g.selectAll(".dimension-path-" + currentDimension + "-additional")
     .data(data)
     .enter().append("path")
@@ -130,7 +130,6 @@ for (var i = 0; i < dimensions.length - 1; i++) {
     })
     .attr("stroke", "transparent")
     .attr("stroke-opacity", 0.5)
-    .attr("stroke-width", 2)
     .attr("fill", "none");
 }
 
