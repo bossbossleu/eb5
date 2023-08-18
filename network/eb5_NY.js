@@ -36,8 +36,8 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
 
   dimensions.forEach(function (dimension) {
     y[dimension] = d3.scalePoint()
-        .domain(Array.from(new Set(data.map(function (d) { return d[dimension]; }))).reverse()) // Reverse the domain array
-        .range([height - margin.top - margin.bottom, 0]);
+      .domain(Array.from(new Set(data.map(function (d) { return d[dimension]; }))).reverse()) // Reverse the domain array
+      .range([height - margin.top - margin.bottom, 0]);
   });
 
   var line = d3.line()
@@ -45,111 +45,118 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
     .x(function (d) { return x(d[0]); })
     .y(function (d) { return y[d[0]](d[1]); });
 
+  // Function to handle circle click
+  function handleCircleClick(event, d) {
+    var clickedDimension = d3.select(this).attr("data-dimension");
+    // Perform actions based on the clicked circle, if needed
+    d.selected = !d.selected; // Toggle selection status
+    updateConnectedElements(d);
+  }
+
   // Append circles for nodes
   dimensions.forEach(function (currentDimension) {
     var circles = g.selectAll(".node-circle-" + currentDimension)
-  .data(data)
-  .enter().append("circle")
-  .attr("class", "node-circle node-circle-" + currentDimension) // Add class for specific dimension
-  .attr("cx", x(currentDimension))
-  .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
-  .attr("data-dimension", currentDimension) // Store currentDimension as a data attribute
-  .attr("data-value", function (d) { return d[currentDimension]; }) // Store the value for filtering
-  .attr("r", function (d) {
-      var valueCount = data.filter(function (item) {
+      .data(data)
+      .enter().append("circle")
+      .attr("class", "node-circle node-circle-" + currentDimension)
+      .attr("cx", x(currentDimension))
+      .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
+      .attr("data-dimension", currentDimension) // Corrected attribute name
+      .attr("data-value", function (d) { return d[currentDimension]; })
+      .attr("r", function (d) {
+        var valueCount = data.filter(function (item) {
           return item[currentDimension] === d[currentDimension];
-      }).length;
-      return valueCount * 2; // Adjust the multiplier as needed
-  })
-  .style("fill", "white") // Set initial fill color
-  .style("stroke", "black") // Set stroke color
-  .style("stroke-width", "1px") // Set stroke width
-  .on("mouseover", function () {
-      d3.select(this)
-          .style("fill", "neonGreen")
-          .style("stroke", "neonGreen")
-          .style("stroke-width", "2px");
-  })
-  .on("mouseout", function () {
-      d3.select(this)
-          .style("fill", "white")
-          .style("stroke", "black")
-          .style("stroke-width", "1px");
+        }).length;
+        return valueCount * 2;
+      })
+      .style("fill", "white")
+      .style("stroke", "black")
+      .style("stroke-width", "1px")
+      .on("click", handleCircleClick); // Attach the click event listener here
+
   });
 
-});
+// Function to update connected elements based on selection status
+function updateConnectedElements(clickedData) {
+  // Update color of clicked circle
+  var clickedCircle = g.select(".node-circle-" + clickedData["data-dimension"]);
+  clickedCircle.style("fill", clickedData.selected ? "neonGreen" : "white");
 
-  // Mouseover event handler for circles
-  function handleCircleMouseOver(event, d) {
-    var circle = d3.select(this);
+  // Update color of connected lines and circles
+  dimensions.forEach(function (currentDimension, index) {
+    if (index < dimensions.length - 1) {
+      var currentSelector = ".dimension-path-" + currentDimension;
+      var nextDimension = dimensions[index + 1];
 
-    // Change circle fill color to neon green
-    circle.style("fill", "neonGreen")
-      .style("stroke", "neonGreen")
-      .style("stroke-width", "2px");
-  }
+      g.selectAll(currentSelector)
+        .filter(function (d) {
+          return d[currentDimension] === clickedData[currentDimension];
+        })
+        .style("stroke", clickedData.selected ? "neonGreen" : "darkgrey")
+        .style("stroke-opacity", clickedData.selected ? 0.7 : 0.7);
 
-  // Mouseout event handler for circles
-  function handleCircleMouseOut(event, d) {
-    var circle = d3.select(this);
-
-    // Change circle fill color back to white
-    circle.style("fill", "white")
-      .style("stroke", "black")
-      .style("stroke-width", "1px");
-  }
-
-  // Loop through each dimension and draw paths
-  for (var i = 0; i < dimensions.length - 1; i++) {
-    var currentDimension = dimensions[i];
-    var nextDimension = dimensions[i + 1];
-
-    g.selectAll(".dimension-path-" + currentDimension)
-      .data(data)
-      .enter().append("path")
-      .attr("class", "dimension-path-" + currentDimension)
-      .attr("d", function (d) {
-        var dataSegment = dimensions.slice(i, i + 2).map(function (dimension) {
-          return [dimension, d[dimension]];
+      // Update following circles connected to the lines
+      var followingCircles = g.selectAll(".node-circle-" + nextDimension)
+        .filter(function (d) {
+          return d[currentDimension] === clickedData[currentDimension];
         });
-        return line(dataSegment);
-      })
-      .attr("stroke", function (d) {
-        if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
-          return "lightgrey";
-        } else {
-          return "darkgrey";
-        }
-      })
-      .attr("stroke-opacity", function (d) {
-        if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
-          return 0.2;
-        } else {
-          return 0.7;
-        }
-      })
-      .attr("fill", "none");
-  }
 
-  // Draw axes
-  g.selectAll(".dimension")
-    .data(dimensions)
-    .enter().append("g")
-    .attr("class", "dimension")
-    .attr("transform", function (d) { return "translate(" + x(d) + ")"; })
-    .each(function (d) {
-      var tickCounts = {}; // Object to store tick counts for each unique value
-      data.forEach(function (item) {
-        var value = item[d];
-        tickCounts[value] = (tickCounts[value] || 0) + 1;
+      followingCircles.style("fill", clickedData.selected ? "neonGreen" : "white");
+    }
+  });
+}
+
+// Loop through each dimension and draw paths
+for (var i = 0; i < dimensions.length - 1; i++) {
+  var currentDimension = dimensions[i];
+  var nextDimension = dimensions[i + 1];
+
+  g.selectAll(".dimension-path-" + currentDimension)
+    .data(data)
+    .enter().append("path")
+    .attr("class", "dimension-path-" + currentDimension)
+    .attr("d", function (d) {
+      var dataSegment = dimensions.slice(i, i + 2).map(function (dimension) {
+        return [dimension, d[dimension]];
       });
+      return line(dataSegment);
+    })
+    .attr("stroke", function (d) {
+      if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
+        return "lightgrey";
+      } else {
+        return "darkgrey";
+      }
+    })
+    .attr("stroke-opacity", function (d) {
+      if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
+        return 0.2;
+      } else {
+        return 0.7;
+      }
+    })
+    .attr("fill", "none");
+}
 
-      d3.select(this).call(d3.axisLeft(y[d]))
-        .selectAll(".tick")
-        .each(function (tickValue) {
-          var circleRadius = tickCounts[tickValue] * 2; // Calculate circle radius based on tick count
+// Draw axes
+g.selectAll(".dimension")
+  .data(dimensions)
+  .enter().append("g")
+  .attr("class", "dimension")
+  .attr("transform", function (d) { return "translate(" + x(d) + ")"; })
+  .each(function (d) {
+    var tickCounts = {}; // Object to store tick counts for each unique value
+    data.forEach(function (item) {
+      var value = item[d];
+      tickCounts[value] = (tickCounts[value] || 0) + 1;
+    });
 
-          d3.select(this).append("circle")
+    d3.select(this).call(d3.axisLeft(y[d]))
+      .selectAll(".tick")
+      .each(function (tickValue) {
+        var circleRadius = tickCounts[tickValue] * 2; // Calculate circle radius based on tick count
+
+        d3.select(this).append("circle")
           .attr("cx", 0)
           .attr("cy", 0)
           .attr("r", circleRadius)
@@ -174,7 +181,6 @@ g.selectAll(".dimension text")
       return 1;
     }
   });
-
 });
 
 
