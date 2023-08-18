@@ -45,36 +45,12 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
     .x(function (d) { return x(d[0]); })
     .y(function (d) { return y[d[0]](d[1]); });
 
-  // Function to handle circle click
-  function handleCircleClick(event, d) {
-    var clickedDimension = d3.select(this).attr("data-dimension");
-    // Perform actions based on the clicked circle, if needed
-    d.selected = !d.selected; // Toggle selection status
-    updateConnectedElements(d);
-  }
-
-  // Append circles for nodes
-  dimensions.forEach(function (currentDimension) {
-    var circles = g.selectAll(".node-circle-" + currentDimension)
-      .data(data)
-      .enter().append("circle")
-      .attr("class", "node-circle node-circle-" + currentDimension)
-      .attr("cx", x(currentDimension))
-      .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
-      .attr("data-dimension", currentDimension) // Corrected attribute name
-      .attr("data-value", function (d) { return d[currentDimension]; })
-      .attr("r", function (d) {
-        var valueCount = data.filter(function (item) {
-          return item[currentDimension] === d[currentDimension];
-        }).length;
-        return valueCount * 2;
-      })
-      .style("fill", "white")
-      .style("stroke", "black")
-      .style("stroke-width", "1px")
-      .on("click", handleCircleClick); // Attach the click event listener here
-
-  });
+// Function to handle circle click
+function handleCircleClick(d) {
+  // Perform actions based on the clicked circle, if needed
+  d.selected = !d.selected; // Toggle selection status
+  updateConnectedElements(d);
+}
 
 // Function to update connected elements based on selection status
 function updateConnectedElements(clickedData) {
@@ -104,6 +80,10 @@ function updateConnectedElements(clickedData) {
       followingCircles.style("fill", clickedData.selected ? "neonGreen" : "white");
     }
   });
+
+  // Update additional green paths
+  g.selectAll(".dimension-path-" + clickedData["data-dimension"] + "-additional")
+    .style("stroke", clickedData.selected ? "neonGreen" : "transparent");
 }
 
 // Loop through each dimension and draw paths
@@ -135,6 +115,22 @@ for (var i = 0; i < dimensions.length - 1; i++) {
         return 0.7;
       }
     })
+    .attr("fill", "none");
+
+  // Add additional green paths
+  g.selectAll(".dimension-path-" + currentDimension + "-additional")
+    .data(data)
+    .enter().append("path")
+    .attr("class", "dimension-path-" + currentDimension + "-additional")
+    .attr("d", function (d) {
+      var dataSegment = dimensions.slice(i, i + 2).map(function (dimension) {
+        return [dimension, d[dimension]];
+      });
+      return line(dataSegment);
+    })
+    .attr("stroke", "transparent")
+    .attr("stroke-opacity", 0.5)
+    .attr("stroke-width", 2)
     .attr("fill", "none");
 }
 
@@ -171,6 +167,28 @@ g.selectAll(".dimension")
       .style("font-size", "7px")
       .style("font-family", "Arial");
   });
+
+// Append circles for nodes
+dimensions.forEach(function (currentDimension) {
+  var circles = g.selectAll(".node-circle-" + currentDimension)
+    .data(data)
+    .enter().append("circle")
+    .attr("class", "node-circle node-circle-" + currentDimension)
+    .attr("cx", x(currentDimension))
+    .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
+    .attr("data-dimension", currentDimension) // Corrected attribute name
+    .attr("data-value", function (d) { return d[currentDimension]; })
+    .attr("r", function (d) {
+      var valueCount = data.filter(function (item) {
+        return item[currentDimension] === d[currentDimension];
+      }).length;
+      return valueCount * 2;
+    })
+    .style("fill", "white")
+    .style("stroke", "black")
+    .style("stroke-width", "1px")
+    .on("click", handleCircleClick); // Attach the click event listener here
+});
 
 // Adjust opacity for text labels starting with "NA"
 g.selectAll(".dimension text")
