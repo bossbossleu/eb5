@@ -45,14 +45,14 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
     .x(function (d) { return x(d[0]); })
     .y(function (d) { return y[d[0]](d[1]); });
 
-// Function to handle circle click
-function handleCircleClick(d) {
-  // Perform actions based on the clicked circle, if needed
-  d.selected = !d.selected; // Toggle selection status
-  updateConnectedElements(d);
-}
+  // Function to handle circle click
+  function handleCircleClick(d) {
+    // Perform actions based on the clicked circle, if needed
+    d.selected = !d.selected; // Toggle selection status
+    updateConnectedElements(d);
+  }
 
-// Function to update connected elements based on selection status
+  // Function to update connected elements based on selection status
 function updateConnectedElements(clickedData) {
   // Update color of clicked circle
   var clickedCircle = g.select(".node-circle-" + clickedData["data-dimension"]);
@@ -81,105 +81,92 @@ function updateConnectedElements(clickedData) {
     }
   });
 
-  // Update additional green paths
+  // Update color of additional green paths
   g.selectAll(".dimension-path-" + clickedData["data-dimension"] + "-additional")
     .style("stroke", clickedData.selected ? "neonGreen" : "transparent");
 }
 
-// Loop through each dimension pair and draw connecting lines
-for (var i = 0; i < dimensions.length - 1; i++) {
-  var currentDimension = dimensions[i];
-  var nextDimension = dimensions[i + 1];
 
-  g.selectAll(".dimension-path-" + currentDimension)
-    .data(data)
-    .enter().append("path")
-    .attr("class", "dimension-path-" + currentDimension)
-    .attr("d", function (d) {
-      var dataSegment = dimensions.slice(i, i + 2).map(function (dimension) {
-        return [dimension, d[dimension]];
+
+  // Loop through each dimension pair and draw connecting lines
+  for (var i = 0; i < dimensions.length - 1; i++) {
+    var currentDimension = dimensions[i];
+    var nextDimension = dimensions[i + 1];
+
+    g.selectAll(".dimension-path-" + currentDimension)
+      .data(data)
+      .enter().append("path")
+      .attr("class", "dimension-path-" + currentDimension)
+      .attr("d", function (d) {
+        var dataSegment = dimensions.slice(i, i + 2).map(function (dimension) {
+          return [dimension, d[dimension]];
+        });
+        return line(dataSegment);
+      })
+      .attr("stroke", function (d) {
+        if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
+          return "lightgrey";
+        } else {
+          return "darkgrey";
+        }
+      })
+      .attr("stroke-opacity", function (d) {
+        if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
+          return 0.2;
+        } else {
+          return 0.7;
+        }
+      })
+      .attr("fill", "none");
+  }
+
+  // Draw axes
+  g.selectAll(".dimension")
+    .data(dimensions)
+    .enter().append("g")
+    .attr("class", "dimension")
+    .attr("transform", function (d) { return "translate(" + x(d) + ")"; })
+    .each(function (d) {
+      var tickCounts = {}; // Object to store tick counts for each unique value
+      data.forEach(function (item) {
+        var value = item[d];
+        tickCounts[value] = (tickCounts[value] || 0) + 1;
       });
-      return line(dataSegment);
-    })
-    .attr("stroke", function (d) {
-      if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
-        return "lightgrey";
-      } else {
-        return "darkgrey";
-      }
-    })
-    .attr("stroke-opacity", function (d) {
-      if (d[currentDimension].startsWith("NA") || d[nextDimension].startsWith("NA")) {
-        return 0.2;
-      } else {
-        return 0.7;
-      }
-    })
-    .attr("fill", "none");
 
-  // Append additional green paths for clicked circles
-  g.selectAll(".dimension-path-" + currentDimension + "-additional")
-    .data(data)
-    .enter().append("path")
-    .attr("class", "dimension-path-" + currentDimension + "-additional")
-    .attr("d", function (d) {
-      var dataSegment = dimensions.slice(i, i + 2).map(function (dimension) {
-        return [dimension, d[dimension]];
-      });
-      return line(dataSegment);
-    })
-    .attr("stroke", "transparent")
-    .attr("stroke-opacity", 0.5)
-    .attr("fill", "none");
-}
+      d3.select(this).call(d3.axisLeft(y[d]))
+        .selectAll(".tick")
+        .each(function (tickValue) {
+          var circleRadius = tickCounts[tickValue] * 2; // Calculate circle radius based on tick count
 
-// Draw axes
-g.selectAll(".dimension")
-  .data(dimensions)
-  .enter().append("g")
-  .attr("class", "dimension")
-  .attr("transform", function (d) { return "translate(" + x(d) + ")"; })
-  .each(function (d) {
-    var tickCounts = {}; // Object to store tick counts for each unique value
-    data.forEach(function (item) {
-      var value = item[d];
-      tickCounts[value] = (tickCounts[value] || 0) + 1;
+          d3.select(this).append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", circleRadius)
+            .style("fill", "white") // Set the fill color to white
+            .style("stroke", "black") // Set the stroke color to black
+            .style("stroke-width", "1px"); // Set the stroke width
+        });
+
+      d3.select(this).selectAll("path")
+        .style("opacity", 0.1);
+      d3.select(this).selectAll("text")
+        .style("font-size", "7px")
+        .style("font-family", "Arial");
     });
 
-    d3.select(this).call(d3.axisLeft(y[d]))
-      .selectAll(".tick")
-      .each(function (tickValue) {
-        var circleRadius = tickCounts[tickValue] * 2; // Calculate circle radius based on tick count
-
-        d3.select(this).append("circle")
-          .attr("cx", 0)
-          .attr("cy", 0)
-          .attr("r", circleRadius)
-          .style("fill", "white") // Set the fill color to white
-          .style("stroke", "black") // Set the stroke color to black
-          .style("stroke-width", "1px"); // Set the stroke width
-      });
-
-    d3.select(this).selectAll("path")
-      .style("opacity", 0.1);
-    d3.select(this).selectAll("text")
-      .style("font-size", "7px")
-      .style("font-family", "Arial");
-  });
-
-// Append circles for nodes
+  // Append circles for nodes
 dimensions.forEach(function (currentDimension) {
   var circles = g.selectAll(".node-circle-" + currentDimension)
     .data(data)
     .enter().append("circle")
     .attr("class", "node-circle node-circle-" + currentDimension)
     .attr("cx", x(currentDimension))
-    .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
+    .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); }) // Use the current data value
     .attr("data-dimension", currentDimension) // Corrected attribute name
-    .attr("data-value", function (d) { return d[currentDimension]; })
+    .attr("data-value", function (d) { return d[currentDimension]; }) // Use the current data value
     .attr("r", function (d) {
       var valueCount = data.filter(function (item) {
-        return item[currentDimension] === d[currentDimension];
+        return item[currentDimension] === d[currentDimension]; // Use the current data value
       }).length;
       return valueCount * 2;
     })
@@ -189,16 +176,17 @@ dimensions.forEach(function (currentDimension) {
     .on("click", handleCircleClick); // Attach the click event listener here
 });
 
-// Adjust opacity for text labels starting with "NA"
-g.selectAll(".dimension text")
-  .style("opacity", function (d) {
-    if (d.startsWith("NA")) {
-      return 0.1;
-    } else {
-      return 1;
-    }
-  });
+  // Adjust opacity for text labels starting with "NA"
+  g.selectAll(".dimension text")
+    .style("opacity", function (d) {
+      if (d.startsWith("NA")) {
+        return 0.1;
+      } else {
+        return 1;
+      }
+    });
 });
+
 
 
 
