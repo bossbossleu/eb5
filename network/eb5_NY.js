@@ -1,5 +1,5 @@
 // Load your JSON data
-d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_completed_projects - NY.json").then(function (originalData) {
+d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json").then(function (originalData) {
   // Define margins
   var margin = { top: 80, right: 80, bottom: 80, left: 160 }; // Adjust as needed
 
@@ -44,49 +44,6 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/EB5_complet
     .defined(function (d) { return d[1] !== undefined; })
     .x(function (d) { return x(d[0]); })
     .y(function (d) { return y[d[0]](d[1]); });
-
-  // Function to handle circle click
-  function handleCircleClick(d) {
-    // Perform actions based on the clicked circle, if needed
-    d.selected = !d.selected; // Toggle selection status
-    updateConnectedElements(d);
-  }
-
-  // Function to update connected elements based on selection status
-function updateConnectedElements(clickedData) {
-  // Update color of clicked circle
-  var clickedCircle = g.select(".node-circle-" + clickedData["data-dimension"]);
-  clickedCircle.style("fill", clickedData.selected ? "neonGreen" : "white");
-
-  // Update color of connected lines and circles
-  dimensions.forEach(function (currentDimension, index) {
-    if (index < dimensions.length - 1) {
-      var currentSelector = ".dimension-path-" + currentDimension;
-      var nextDimension = dimensions[index + 1];
-
-      g.selectAll(currentSelector)
-        .filter(function (d) {
-          return d[currentDimension] === clickedData[currentDimension];
-        })
-        .style("stroke", clickedData.selected ? "neonGreen" : "darkgrey")
-        .style("stroke-opacity", clickedData.selected ? 0.7 : 0.7);
-
-      // Update following circles connected to the lines
-      var followingCircles = g.selectAll(".node-circle-" + nextDimension)
-        .filter(function (d) {
-          return d[currentDimension] === clickedData[currentDimension];
-        });
-
-      followingCircles.style("fill", clickedData.selected ? "neonGreen" : "white");
-    }
-  });
-
-  // Update color of additional green paths
-  g.selectAll(".dimension-path-" + clickedData["data-dimension"] + "-additional")
-    .style("stroke", clickedData.selected ? "neonGreen" : "transparent");
-}
-
-
 
   // Loop through each dimension pair and draw connecting lines
   for (var i = 0; i < dimensions.length - 1; i++) {
@@ -136,15 +93,7 @@ function updateConnectedElements(clickedData) {
       d3.select(this).call(d3.axisLeft(y[d]))
         .selectAll(".tick")
         .each(function (tickValue) {
-          var circleRadius = tickCounts[tickValue] * 2; // Calculate circle radius based on tick count
-
-          d3.select(this).append("circle")
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", circleRadius)
-            .style("fill", "white") // Set the fill color to white
-            .style("stroke", "black") // Set the stroke color to black
-            .style("stroke-width", "1px"); // Set the stroke width
+          // No need to add circles here
         });
 
       d3.select(this).selectAll("path")
@@ -153,28 +102,6 @@ function updateConnectedElements(clickedData) {
         .style("font-size", "7px")
         .style("font-family", "Arial");
     });
-
-  // Append circles for nodes
-dimensions.forEach(function (currentDimension) {
-  var circles = g.selectAll(".node-circle-" + currentDimension)
-    .data(data)
-    .enter().append("circle")
-    .attr("class", "node-circle node-circle-" + currentDimension)
-    .attr("cx", x(currentDimension))
-    .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); }) // Use the current data value
-    .attr("data-dimension", currentDimension) // Corrected attribute name
-    .attr("data-value", function (d) { return d[currentDimension]; }) // Use the current data value
-    .attr("r", function (d) {
-      var valueCount = data.filter(function (item) {
-        return item[currentDimension] === d[currentDimension]; // Use the current data value
-      }).length;
-      return valueCount * 2;
-    })
-    .style("fill", "white")
-    .style("stroke", "black")
-    .style("stroke-width", "1px")
-    .on("click", handleCircleClick); // Attach the click event listener here
-});
 
   // Adjust opacity for text labels starting with "NA"
   g.selectAll(".dimension text")
@@ -185,8 +112,78 @@ dimensions.forEach(function (currentDimension) {
         return 1;
       }
     });
-});
 
+  // Append circles for nodes
+  dimensions.forEach(function (currentDimension) {
+    var circles = g.selectAll(".node-circle-" + currentDimension)
+      .data(data)
+      .enter().append("circle")
+      .attr("class", "node-circle node-circle-" + currentDimension)
+      .attr("cx", x(currentDimension))
+      .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
+      .attr("data-dimension", currentDimension)
+      .attr("data-value", function (d) { return d[currentDimension]; })
+      .attr("r", function (d) {
+        var valueCount = data.filter(function (item) {
+          return item[currentDimension] === d[currentDimension];
+        }).length;
+        return valueCount * 2;
+      })
+      .style("fill", "white")
+      .style("stroke", "black")
+      .style("stroke-width", "1px")
+      .on("click", function (d) {
+        handleCircleClick(d); // Pass the data to the click handler
+      });
+  });
+
+
+  // Function to handle circle click
+  function handleCircleClick(d) {
+    // Perform actions based on the clicked circle, if needed
+    d.selected = !d.selected; // Toggle selection status
+    updateConnectedElements(d);
+    console.log("Circle clicked:", d);
+  }
+
+
+  // Function to update connected elements based on selection status
+  function updateConnectedElements(clickedData) {
+    console.log("Updating connected elements:", clickedData);
+    // Update color of clicked circle
+    var clickedCircle = g.select(".node-circle-" + clickedData["data-dimension"]);
+    clickedCircle.style("fill", clickedData.selected ? "neonGreen" : "white");
+
+    // Update color of connected lines and circles
+    dimensions.forEach(function (currentDimension, index) {
+      if (index < dimensions.length - 1) {
+        var currentSelector = ".dimension-path-" + currentDimension;
+        var nextDimension = dimensions[index + 1];
+
+        g.selectAll(currentSelector)
+          .filter(function (d) {
+            return d[currentDimension] === clickedData[currentDimension];
+          })
+          .style("stroke", clickedData.selected ? "neonGreen" : "darkgrey")
+          .style("stroke-opacity", clickedData.selected ? 1 : 0.7);
+
+        // Update following circles connected to the lines
+        var followingCircles = g.selectAll(".node-circle-" + nextDimension)
+          .filter(function (d) {
+            return d[currentDimension] === clickedData[currentDimension];
+          });
+
+        followingCircles.style("fill", clickedData.selected ? "neonGreen" : "white");
+      }
+    });
+
+    // Update color of additional green paths
+    g.selectAll(".dimension-path-" + clickedData["data-dimension"] + "-additional")
+      .style("stroke", clickedData.selected ? "neonGreen" : "transparent");
+  }
+
+
+});
 
 
 

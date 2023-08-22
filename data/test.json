@@ -1,20 +1,20 @@
 [
     {
-        "r_name": "American Life Investments LLC",
-        "p_name": "CCCC Miami Towers",
-        "developer_1": "China City Construction Corporation",
-        "arch_firm_1": "KPF"
+        "r_name": "A1",
+        "p_name": "B1",
+        "developer_1": "C1",
+        "arch_firm_1": "D1"
     },
     {
-        "r_name": "American Life Investments LLC",
-        "p_name": "SkyRise Miami",
-        "developer_1": "China City Construction Corporation",
-        "arch_firm_1": "KPF"
+        "r_name": "A1",
+        "p_name": "B2",
+        "developer_1": "C1",
+        "arch_firm_1": "D1"
     },
     {
-        "r_name": "Miami Metropolitan Regional Center",
-        "p_name": "MiamiCentral Station",
-        "developer_1": "All Aboard Florida",
-        "arch_firm_1": "KPF"
+        "r_name": "A2",
+        "p_name": "B3",
+        "developer_1": "C2",
+        "arch_firm_1": "D1"
     }
 ]
