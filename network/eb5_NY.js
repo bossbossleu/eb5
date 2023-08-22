@@ -132,27 +132,25 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
       .style("fill", "white")
       .style("stroke", "black")
       .style("stroke-width", "1px")
-      .on("click", function (d) {
+      .on("click", function (event, d) {
         handleCircleClick(d); // Pass the data to the click handler
       });
   });
 
-
-  // Function to handle circle click
-  function handleCircleClick(d) {
-    // Perform actions based on the clicked circle, if needed
-    d.selected = !d.selected; // Toggle selection status
-    updateConnectedElements(d);
-    console.log("Circle clicked:", d);
-  }
-
+// Function to handle circle click
+function handleCircleClick(clickedData) {
+  // Perform actions based on the clicked circle, if needed
+  clickedData.selected = !clickedData.selected; // Toggle selection status
+  updateConnectedElements(clickedData); // Pass the clicked circle's data
+  console.log("Circle clicked:", clickedData);
+}
 
   // Function to update connected elements based on selection status
   function updateConnectedElements(clickedData) {
     console.log("Updating connected elements:", clickedData);
     // Update color of clicked circle
     var clickedCircle = g.select(".node-circle-" + clickedData["data-dimension"]);
-    clickedCircle.style("fill", clickedData.selected ? "neonGreen" : "white");
+    clickedCircle.style("fill", clickedData.selected ? "red" : "white");
 
     // Update color of connected lines and circles
     dimensions.forEach(function (currentDimension, index) {
@@ -164,7 +162,7 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
           .filter(function (d) {
             return d[currentDimension] === clickedData[currentDimension];
           })
-          .style("stroke", clickedData.selected ? "neonGreen" : "darkgrey")
+          .style("stroke", clickedData.selected ? "red" : "darkgrey")
           .style("stroke-opacity", clickedData.selected ? 1 : 0.7);
 
         // Update following circles connected to the lines
@@ -173,13 +171,13 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
             return d[currentDimension] === clickedData[currentDimension];
           });
 
-        followingCircles.style("fill", clickedData.selected ? "neonGreen" : "white");
+        followingCircles.style("fill", clickedData.selected ? "red" : "white");
       }
     });
 
-    // Update color of additional green paths
+    // Update color of additional red paths
     g.selectAll(".dimension-path-" + clickedData["data-dimension"] + "-additional")
-      .style("stroke", clickedData.selected ? "neonGreen" : "transparent");
+      .style("stroke", clickedData.selected ? "red" : "transparent");
   }
 
 
