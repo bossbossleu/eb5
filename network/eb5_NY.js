@@ -145,59 +145,86 @@ function handleCircleClick(clickedData) {
   console.log("Circle clicked:", clickedData);
 }
 
-  // Function to update connected elements based on selection status
+// Function to update connected elements based on selection status
 function updateConnectedElements(clickedData) {
   console.log("Updating connected elements:", clickedData);
 
-  // Reset all circles and lines to their default styles
-  g.selectAll(".node-circle")
-    .style("fill", "white");
-  g.selectAll(".dimension-path")
-    .style("stroke", "darkgrey")
-    .style("stroke-opacity", 0.7);
+  var firstDimension = dimensions[0];
+  var lastDimension = dimensions[dimensions.length - 1];
 
-  // Update color of clicked circle
-  var clickedCircle = g.select(".node-circle-" + clickedData["data-dimension"]);
-  clickedCircle.style("fill", clickedData.selected ? "red" : "white");
+  var firstDimensionValue = clickedData[firstDimension];
+  var lastDimensionValue = clickedData[lastDimension];
 
-  // Update color of connected lines and circles
-  dimensions.forEach(function (currentDimension, index) {
-    if (index < dimensions.length - 1) {
-      var currentSelector = ".dimension-path-" + currentDimension;
-      var nextDimension = dimensions[index + 1];
+  var firstDimensionCircles = g.selectAll(".node-circle-" + firstDimension)
+    .filter(function (d) {
+      return d[firstDimension] === firstDimensionValue;
+    });
 
-      // Update the clicked line and circles directly connected to it
-      g.selectAll(currentSelector)
-        .filter(function (d) {
-          return (
-            (d[currentDimension] === clickedData[currentDimension] &&
-              d[nextDimension] === clickedData[nextDimension]) ||
-            (d[currentDimension] === clickedData[currentDimension - 1] &&
-              d[nextDimension] === clickedData[nextDimension])
-          );
-        })
-        .style("stroke", clickedData.selected ? "red" : "darkgrey")
-        .style("stroke-opacity", clickedData.selected ? 1 : 0.7);
+  var lastDimensionCircles = g.selectAll(".node-circle-" + lastDimension)
+    .filter(function (d) {
+      return d[lastDimension] === lastDimensionValue;
+    });
 
-      // Update following circles connected to the lines
-      var followingCircles = g.selectAll(".node-circle-" + nextDimension)
-        .filter(function (d) {
-          return (
-            (d[currentDimension] === clickedData[currentDimension] &&
-              d[nextDimension] === clickedData[nextDimension]) ||
-            (d[currentDimension - 1] === clickedData[currentDimension - 1] &&
-              d[nextDimension] === clickedData[nextDimension])
-          );
-        });
+  var paths = [];
 
-      followingCircles.style("fill", clickedData.selected ? "red" : "white");
-    }
+  firstDimensionCircles.each(function (firstCircleData) {
+    lastDimensionCircles.each(function (lastCircleData) {
+      var path = [{ dimension: firstDimension, data: firstCircleData }];
+      var currentDimension = firstDimension;
+      var currentIndex = dimensions.indexOf(currentDimension);
+
+      while (currentDimension !== lastDimension) {
+        var nextDimension = dimensions[currentIndex + 1];
+        var nextValue = firstCircleData[nextDimension];
+
+        var nextCircle = g.selectAll(".node-circle-" + nextDimension)
+          .filter(function (d) {
+            return d[nextDimension] === nextValue;
+          });
+
+        path.push({ dimension: nextDimension, data: nextCircle.data()[0] });
+
+        currentIndex++;
+        currentDimension = nextDimension;
+      }
+
+      if (path[path.length - 1].data[lastDimension] === lastCircleData[lastDimension]) {
+        paths.push(path);
+      }
+    });
   });
 
-  // Update color of additional red paths
+  paths = paths.filter(function (path) {
+    return path.every(function (step) {
+      return step.dimension === clickedData["data-dimension"] ||
+             step.data[clickedData["data-dimension"]] === clickedData[clickedData["data-dimension"]];
+    });
+  });
+
+  paths.forEach(function (path) {
+    path.forEach(function (step) {
+      var circle = g.selectAll(".node-circle-" + step.dimension)
+        .filter(function (d) {
+          return d[step.dimension] === step.data[step.dimension];
+        });
+
+      var path = g.selectAll(".dimension-path-" + step.dimension)
+        .filter(function (d) {
+          return d[step.dimension] === step.data[step.dimension] &&
+                 d[dimensions[dimensions.indexOf(step.dimension) + 1]] === step.data[dimensions[dimensions.indexOf(step.dimension) + 1]];
+        });
+
+      circle.style("fill", clickedData.selected ? "red" : "white");
+      path.style("stroke", clickedData.selected ? "red" : "darkgrey")
+        .style("stroke-opacity", clickedData.selected ? 1 : 0.7);
+    });
+  });
+
   g.selectAll(".dimension-path-" + clickedData["data-dimension"] + "-additional")
     .style("stroke", clickedData.selected ? "red" : "transparent");
 }
+
+// ... (Rest of your existing code)
 
 
 });
