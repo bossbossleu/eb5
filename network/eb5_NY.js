@@ -149,82 +149,44 @@ function handleCircleClick(clickedData) {
 function updateConnectedElements(clickedData) {
   console.log("Updating connected elements:", clickedData);
 
-  var firstDimension = dimensions[0];
-  var lastDimension = dimensions[dimensions.length - 1];
+  var currentDimension = clickedData["data-dimension"];
+  var currentDimensionIndex = dimensions.indexOf(currentDimension);
 
-  var firstDimensionValue = clickedData[firstDimension];
-  var lastDimensionValue = clickedData[lastDimension];
+  // Recursive function to traverse dimensions and update colors
+  function traverseDimensions(index, direction) {
+    var currentDimension = dimensions[index];
+    var nextDimensionIndex = direction === "next" ? index + 1 : index - 1;
+    var nextDimension = dimensions[nextDimensionIndex];
 
-  var firstDimensionCircles = g.selectAll(".node-circle-" + firstDimension)
-    .filter(function (d) {
-      return d[firstDimension] === firstDimensionValue;
-    });
+    var currentDimensionValue = clickedData[currentDimension];
 
-  var lastDimensionCircles = g.selectAll(".node-circle-" + lastDimension)
-    .filter(function (d) {
-      return d[lastDimension] === lastDimensionValue;
-    });
+    var circles = g.selectAll(".node-circle-" + currentDimension)
+      .filter(function (d) {
+        return d[currentDimension] === currentDimensionValue;
+      });
 
-  var paths = [];
+    var paths = g.selectAll(".dimension-path-" + currentDimension)
+      .filter(function (d) {
+        return d[currentDimension] === currentDimensionValue &&
+               d[nextDimension] === clickedData[nextDimension];
+      });
 
-  firstDimensionCircles.each(function (firstCircleData) {
-    lastDimensionCircles.each(function (lastCircleData) {
-      var path = [{ dimension: firstDimension, data: firstCircleData }];
-      var currentDimension = firstDimension;
-      var currentIndex = dimensions.indexOf(currentDimension);
+    circles.style("fill", clickedData.selected ? "red" : "white");
+    paths.style("stroke", clickedData.selected ? "red" : "darkgrey")
+      .style("stroke-opacity", clickedData.selected ? 1 : 0.7);
 
-      while (currentDimension !== lastDimension) {
-        var nextDimension = dimensions[currentIndex + 1];
-        var nextValue = firstCircleData[nextDimension];
+    if (nextDimensionIndex >= 0 && nextDimensionIndex < dimensions.length) {
+      traverseDimensions(nextDimensionIndex, direction);
+    }
+  }
 
-        var nextCircle = g.selectAll(".node-circle-" + nextDimension)
-          .filter(function (d) {
-            return d[nextDimension] === nextValue;
-          });
+  traverseDimensions(currentDimensionIndex, "next");
+  traverseDimensions(currentDimensionIndex, "prev");
 
-        path.push({ dimension: nextDimension, data: nextCircle.data()[0] });
-
-        currentIndex++;
-        currentDimension = nextDimension;
-      }
-
-      if (path[path.length - 1].data[lastDimension] === lastCircleData[lastDimension]) {
-        paths.push(path);
-      }
-    });
-  });
-
-  paths = paths.filter(function (path) {
-    return path.every(function (step) {
-      return step.dimension === clickedData["data-dimension"] ||
-             step.data[clickedData["data-dimension"]] === clickedData[clickedData["data-dimension"]];
-    });
-  });
-
-  paths.forEach(function (path) {
-    path.forEach(function (step) {
-      var circle = g.selectAll(".node-circle-" + step.dimension)
-        .filter(function (d) {
-          return d[step.dimension] === step.data[step.dimension];
-        });
-
-      var path = g.selectAll(".dimension-path-" + step.dimension)
-        .filter(function (d) {
-          return d[step.dimension] === step.data[step.dimension] &&
-                 d[dimensions[dimensions.indexOf(step.dimension) + 1]] === step.data[dimensions[dimensions.indexOf(step.dimension) + 1]];
-        });
-
-      circle.style("fill", clickedData.selected ? "red" : "white");
-      path.style("stroke", clickedData.selected ? "red" : "darkgrey")
-        .style("stroke-opacity", clickedData.selected ? 1 : 0.7);
-    });
-  });
-
-  g.selectAll(".dimension-path-" + clickedData["data-dimension"] + "-additional")
+  g.selectAll(".dimension-path-" + currentDimension + "-additional")
     .style("stroke", clickedData.selected ? "red" : "transparent");
 }
 
-// ... (Rest of your existing code)
 
 
 });
