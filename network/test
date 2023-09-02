@@ -180,26 +180,34 @@ function handleCircleClick(clickedCircle) {
   updateConnectedElements(selectedRoutes);
 }
 
-// Function to update connected elements and color the selected routes
+/// Function to update connected elements and color the selected routes
 function updateConnectedElements(selectedRoutes) {
+  // Clear the color of all routes and elements
+  clearSelectedRoutes();
+
   // Iterate through the selected routes
   selectedRoutes.forEach(function (route) {
-    dimensions.forEach(function (currentDimension, index) {
+    dimensions.forEach(function (currentDimension) {
       var currentDimensionValue = route[currentDimension];
 
-      // Update the color of circles and paths for the selected route
-      var circles = g.selectAll(".node-circle-" + currentDimension)
+      // Update the color of circles for the selected route
+      g.selectAll(".node-circle-" + currentDimension)
         .filter(function (d) {
           return d[currentDimension] === currentDimensionValue;
-        });
+        })
+        .style("fill", "red");
 
-      var paths = g.selectAll(".dimension-path-" + currentDimension)
+      // Update the color of paths for the selected route and dimension
+      g.selectAll(".dimension-path-" + currentDimension)
         .filter(function (d) {
-          return d[currentDimension] === currentDimensionValue;
-        });
-
-      circles.style("fill", "red");
-      paths.style("stroke", "red");
+          return (
+            d[currentDimension] === currentDimensionValue &&
+            d3.select(this).datum() === route
+          );
+        })
+        .attr("stroke", "red")
+        .attr("stroke-opacity", 0.7)
+        .attr("fill", "none");
 
       // Log to check if circles and paths are updated to red
       console.log("Circles updated to red:", currentDimension);
@@ -207,6 +215,8 @@ function updateConnectedElements(selectedRoutes) {
     });
   });
 }
+
+
 
 // Function to clear the color of all routes and elements
 function clearSelectedRoutes() {
@@ -221,63 +231,3 @@ function clearSelectedRoutes() {
 }
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
