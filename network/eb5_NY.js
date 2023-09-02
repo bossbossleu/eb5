@@ -114,111 +114,109 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
     });
 
   // Append circles for nodes
-dimensions.forEach(function (currentDimension) {
-  var circles = g.selectAll(".node-circle-" + currentDimension)
-    .data(data)
-    .enter().append("circle")
-    .attr("class", "node-circle node-circle-" + currentDimension)
-    .attr("cx", x(currentDimension))
-    .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
-    .attr("data-dimension", currentDimension)
-    .attr("data-value", function (d) { return d[currentDimension]; })
-    .attr("r", function (d) {
-      var valueCount = data.filter(function (item) {
-        return item[currentDimension] === d[currentDimension];
-      }).length;
-      return valueCount * 2;
-    })
-    .style("fill", "white")
-    .style("stroke", "black")
-    .style("stroke-width", "1px")
-    .on("click", function (event, d) {
-      handleCircleClick(this); // Pass the clicked circle element
-    });
-});
-
-// Create an array to store all possible routes
-var allRoutes = [];
-
-// Generate all possible routes
-for (var i = 0; i < data.length; i++) {
-  for (var j = 0; j < data.length; j++) {
-    if (i !== j) {
-      var route = {};
-      dimensions.forEach(function (dimension) {
-        route[dimension] = data[i][dimension];
+  dimensions.forEach(function (currentDimension) {
+    var circles = g.selectAll(".node-circle-" + currentDimension)
+      .data(data)
+      .enter().append("circle")
+      .attr("class", "node-circle node-circle-" + currentDimension)
+      .attr("cx", x(currentDimension))
+      .attr("cy", function (d) { return y[currentDimension](d[currentDimension]); })
+      .attr("data-dimension", currentDimension)
+      .attr("data-value", function (d) { return d[currentDimension]; })
+      .attr("r", function (d) {
+        var valueCount = data.filter(function (item) {
+          return item[currentDimension] === d[currentDimension];
+        }).length;
+        return valueCount * 2;
+      })
+      .style("fill", "white")
+      .style("stroke", "black")
+      .style("stroke-width", "1px")
+      .on("click", function (event, d) {
+        handleCircleClick(this); // Pass the clicked circle element
       });
-      allRoutes.push(route);
+  });
+
+  // Create an array to store all possible routes
+  var allRoutes = [];
+
+  // Generate all possible routes
+  for (var i = 0; i < data.length; i++) {
+    for (var j = 0; j < data.length; j++) {
+      if (i !== j) {
+        var route = {};
+        dimensions.forEach(function (dimension) {
+          route[dimension] = data[i][dimension];
+        });
+        allRoutes.push(route);
+      }
     }
   }
-}
 
-// Remove duplicate routes by converting the array to a Set and back to an array
-allRoutes = Array.from(new Set(allRoutes.map(JSON.stringify))).map(JSON.parse);
+  // Remove duplicate routes by converting the array to a Set and back to an array
+  allRoutes = Array.from(new Set(allRoutes.map(JSON.stringify))).map(JSON.parse);
 
-console.log(allRoutes);
+  console.log(allRoutes);
 
-// Function to handle circle click
-function handleCircleClick(clickedCircle) {
-  // Clear any previously selected routes
-  clearSelectedRoutes();
+  // Function to handle circle click
+  function handleCircleClick(clickedCircle) {
 
-  // Get the clicked circle's value using the data-value attribute
-  var clickedValue = clickedCircle.getAttribute("data-value");
-  console.log("Clicked Value:", clickedValue);
+    // Get the clicked circle's value using the data-value attribute
+    var clickedValue = clickedCircle.getAttribute("data-value");
+    console.log("Clicked Value:", clickedValue);
 
-  // Get the data-dimension attribute from the clicked circle
-  var currentDimension = clickedCircle.getAttribute("data-dimension");
+    // Get the data-dimension attribute from the clicked circle
+    var currentDimension = clickedCircle.getAttribute("data-dimension");
 
-  // Filter routes based on the clicked value
-  var selectedRoutes = allRoutes.filter(function (route) {
-    return route[currentDimension] === clickedValue;
-  });
-  console.log("Selected Routes:", selectedRoutes);
-
-  // Update connected elements and color the selected routes
-  updateConnectedElements(selectedRoutes);
-}
-
-// Function to update connected elements and color the selected routes
-function updateConnectedElements(selectedRoutes) {
-  // Iterate through the selected routes
-  selectedRoutes.forEach(function (route) {
-    dimensions.forEach(function (currentDimension, index) {
-      var currentDimensionValue = route[currentDimension];
-
-      // Update the color of circles and paths for the selected route
-      var circles = g.selectAll(".node-circle-" + currentDimension)
-        .filter(function (d) {
-          return d[currentDimension] === currentDimensionValue;
-        });
-
-      var paths = g.selectAll(".dimension-path-" + currentDimension)
-        .filter(function (d) {
-          return d[currentDimension] === currentDimensionValue;
-        });
-
-      circles.style("fill", "red");
-      paths.style("stroke", "red");
-
-      // Log to check if circles and paths are updated to red
-      console.log("Circles updated to red:", currentDimension);
-      console.log("Paths updated to red:", currentDimension);
+    // Filter routes based on the clicked value
+    var selectedRoutes = allRoutes.filter(function (allRoutes) {
+      return allRoutes[currentDimension] === clickedValue;
     });
-  });
-}
 
-// Function to clear the color of all routes and elements
-function clearSelectedRoutes() {
-  // Clear the color of all circles and paths
-  dimensions.forEach(function (currentDimension) {
-    var circles = g.selectAll(".node-circle-" + currentDimension);
-    var paths = g.selectAll(".dimension-path-" + currentDimension);
+    console.log("Selected Routes:", selectedRoutes);
 
-    circles.style("fill", "white");
-    paths.style("stroke", "darkgrey");
-  });
-}
+    // Update connected elements and color the selected routes
+    updateConnectedElements(selectedRoutes);
+  }
+
+  // Function to update connected elements and color the selected routes
+  function updateConnectedElements(selectedRoutes) {
+    // Iterate through the selected routes
+    selectedRoutes.forEach(function (route) {
+      dimensions.forEach(function (currentDimension) {
+        var currentDimensionValue = route[currentDimension];
+
+        // Update the color of circles for the selected route
+        g.selectAll(".node-circle-" + currentDimension)
+          .filter(function (d) {
+            return d[currentDimension] === currentDimensionValue;
+          })
+          .style("fill", "red");
+
+        // Update the color of paths for the selected route and dimension
+        g.selectAll(".dimension-path-" + currentDimension)
+          .filter(function (d) {
+            // Check if the path's datum matches the selected route
+            var pathDatum = d3.select(this).datum();
+            console.log("pathDatum:", pathDatum);
+            console.log("route:", route);
+            return (
+              d[currentDimension] === currentDimensionValue &&
+              pathDatum &&
+              JSON.stringify(pathDatum) === JSON.stringify(route)
+            );
+          })
+          .attr("stroke", "red")
+          .attr("stroke-opacity", 0.7)
+          .attr("fill", "none");
+
+        // Log to check if circles and paths are updated to red
+        console.log("Circles updated to red:", currentDimension);
+        console.log("Paths updated to red:", currentDimension);
+      });
+    });
+  }
+
 
 });
 
