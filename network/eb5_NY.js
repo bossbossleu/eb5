@@ -1,7 +1,7 @@
 // Load your JSON data
 d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/eb5_NY.json").then(function (originalData) {
   // Define margins
-  var margin = { top: 80, right: 80, bottom: 80, left: 160 }; // Adjust as needed
+  var margin = { top: 80, right: 150, bottom: 80, left: 300 }; // Adjust as needed
 
   // Define the dimensions for the parallel categories diagram
   var dimensions = ["r_name", "p_name", "developer_1", "arch_firm_1"];
@@ -176,7 +176,7 @@ function handleCircleClick(clickedCircle) {
     // Clear the color of paths for the selected route and dimension
     g.selectAll(".dimension-path-" + currentDimension)
       .attr("stroke", "darkgrey")
-      .attr("stroke-opacity", 1)
+      .attr("stroke-opacity", 0.7)
       .attr("fill", "none");
   });
 
@@ -230,7 +230,7 @@ function handleCircleClick(clickedCircle) {
       });
     });
   }
-  
+
 });
 
 
