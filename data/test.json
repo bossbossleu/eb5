@@ -28,5 +28,11 @@
         "p_name": "B5",
         "developer_1": "C3",
         "arch_firm_1": "D3"
+    },
+    {
+        "r_name": "A5",
+        "p_name": "B6",
+        "developer_1": "C2",
+        "arch_firm_1": ""
     }
 ]
