@@ -1,5 +1,5 @@
 // Load your JSON data
-d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json").then(function (originalData) {
+d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/eb5_NY.json").then(function (originalData) {
   // Define margins
   var margin = { top: 80, right: 80, bottom: 80, left: 160 }; // Adjust as needed
 
@@ -216,7 +216,6 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
       });
     });
   }
-
 
 });
 
