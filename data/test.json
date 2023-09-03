@@ -1,41 +1,48 @@
 [
     {
+        "r_ID": "ID1034750107",
         "r_name": "A1",
         "p_name": "B1",
         "developer_1": "C1",
         "arch_firm_1": "D1"
     },
     {
+        "r_ID": "ID1034750107",
         "r_name": "A1",
         "p_name": "B2",
         "developer_1": "C1",
         "arch_firm_1": "D1"
     },
     {
+        "r_ID": "ID1034750108",
         "r_name": "A2",
         "p_name": "B3",
         "developer_1": "C2",
         "arch_firm_1": "D1"
     },
     {
+        "r_ID": "ID1034750109",
         "r_name": "A3",
         "p_name": "B4",
         "developer_1": "C1",
         "arch_firm_1": "D2"
     },
     {
+        "r_ID": "ID1034750110",
         "r_name": "A4",
         "p_name": "B5",
         "developer_1": "C3",
         "arch_firm_1": "D3"
     },
     {
+        "r_ID": "ID1034750111",
         "r_name": "A5",
         "p_name": "B6",
         "developer_1": "C2",
         "arch_firm_1": "N/A"
     },
     {
+        "r_ID": "ID1034750111",
         "r_name": "A5",
         "p_name": "B7",
         "developer_1": null,
