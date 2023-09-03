@@ -1,5 +1,5 @@
 // Load your JSON data
-d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json").then(function (originalData) {
+d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/eb5_NY.json").then(function (originalData) {
   // Define margins
   var margin = { top: 80, right: 80, bottom: 80, left: 160 }; // Adjust as needed
 
@@ -158,26 +158,38 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
 
   console.log(allRoutes);
 
-  // Function to handle circle click
-  function handleCircleClick(clickedCircle) {
+// Function to handle circle click
+function handleCircleClick(clickedCircle) {
+  // Get the clicked circle's value using the data-value attribute
+  var clickedValue = clickedCircle.getAttribute("data-value");
+  console.log("Clicked Value:", clickedValue);
 
-    // Get the clicked circle's value using the data-value attribute
-    var clickedValue = clickedCircle.getAttribute("data-value");
-    console.log("Clicked Value:", clickedValue);
+  // Get the data-dimension attribute from the clicked circle
+  var currentDimension = clickedCircle.getAttribute("data-dimension");
 
-    // Get the data-dimension attribute from the clicked circle
-    var currentDimension = clickedCircle.getAttribute("data-dimension");
+  // Clear the color of all circles and paths before updating
+  dimensions.forEach(function (currentDimension) {
+    // Clear the color of circles for the selected route
+    g.selectAll(".node-circle-" + currentDimension)
+      .style("fill", "white");
 
-    // Filter routes based on the clicked value
-    var selectedRoutes = allRoutes.filter(function (allRoutes) {
-      return allRoutes[currentDimension] === clickedValue;
-    });
+    // Clear the color of paths for the selected route and dimension
+    g.selectAll(".dimension-path-" + currentDimension)
+      .attr("stroke", "darkgrey")
+      .attr("stroke-opacity", 1)
+      .attr("fill", "none");
+  });
 
-    console.log("Selected Routes:", selectedRoutes);
+  // Filter routes based on the clicked value
+  var selectedRoutes = allRoutes.filter(function (route) {
+    return route[currentDimension] === clickedValue;
+  });
 
-    // Update connected elements and color the selected routes
-    updateConnectedElements(selectedRoutes);
-  }
+  console.log("Selected Routes:", selectedRoutes);
+
+  // Update connected elements and color the selected routes
+  updateConnectedElements(selectedRoutes);
+}
 
   // Function to update connected elements and color the selected routes
   function updateConnectedElements(selectedRoutes) {
@@ -197,12 +209,14 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
         g.selectAll(".dimension-path-" + currentDimension)
           .filter(function (d) {
             // Check if the path's datum matches the selected route
-            var pathDatum = d3.select(this).datum();
-            console.log("pathDatum:", pathDatum);
-            console.log("route:", route);
+            var pathDatum = {
+              r_name: d.r_name,
+              p_name: d.p_name,
+              developer_1: d.developer_1,
+              arch_firm_1: d.arch_firm_1
+            };
             return (
               d[currentDimension] === currentDimensionValue &&
-              pathDatum &&
               JSON.stringify(pathDatum) === JSON.stringify(route)
             );
           })
@@ -216,7 +230,7 @@ d3.json("https://raw.githubusercontent.com/bossbossleu/eb5/main/data/test.json")
       });
     });
   }
-
+  
 });
 
 
